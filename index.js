@@ -1,6 +1,3 @@
-//
-//
-
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -14,9 +11,9 @@ app.use(express.json());
 app.use(cors());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tbo2m.mongodb.net/?appName=Cluster0`;
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vyznij5.mongodb.net/?appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// const uri = "mongodb+srv://<db_username>:<db_password>@cluster0.tbo2m.mongodb.net/?appName=Cluster0";
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -29,6 +26,26 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const myDB = client.db("digital_life_db");
+    const usersCollection = myDB.collection("users");
+
+    app.get("/", async (req, res) => {
+      console.log("User");
+    });
+
+    app.post("/users", async (req, res) => {
+      const email = req.body.email;
+      const query = { email: email };
+      const existingUsers = await usersCollection.findOne(query);
+      if (existingUsers) {
+        res.send({ message: "User already Exist. Plz try again" });
+      } else {
+        const result = await usersCollection.insertOne(newUser);
+        res.send(result);
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -40,3 +57,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
