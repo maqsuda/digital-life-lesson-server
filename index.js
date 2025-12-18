@@ -29,12 +29,14 @@ async function run() {
 
     const myDB = client.db("digital_life_db");
     const usersCollection = myDB.collection("users");
+    //user api
 
     app.get("/", async (req, res) => {
       console.log("User");
     });
 
     app.post("/users", async (req, res) => {
+      const newUser = req.body;
       const email = req.body.email;
       const query = { email: email };
       const existingUsers = await usersCollection.findOne(query);
