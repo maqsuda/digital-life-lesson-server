@@ -29,6 +29,8 @@ async function run() {
 
     const myDB = client.db("digital_life_db");
     const usersCollection = myDB.collection("users");
+    const lessonsCollection = myDB.collection("lessons");
+
     //user api
 
     app.get("/", async (req, res) => {
@@ -47,6 +49,33 @@ async function run() {
         res.send(result);
       }
     });
+
+    //Lessons
+    app.post("/add-lessons", async (req, res) => {
+      const newUser = req.body;
+      const result = await lessonsCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+    app.get("/my-lessons", async (req, res) => {
+      const query = {};
+      const { email } = req.query;
+
+      if (email) {
+        query.CreateBy = email;
+      }
+
+      const options = { sort: { createdAt: -1 } };
+      const cursor = lessonsCollection.find(query, options);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //Category
+    //  app.get('/category', async (req, res) => {
+    //           const result = await parcelsCollection.findA;
+    //           res.send(result);
+    //       })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
