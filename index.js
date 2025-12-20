@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const port = process.env.PORT || 3000;
 
@@ -68,6 +68,14 @@ async function run() {
       const options = { sort: { CreateDate: -1 } };
       const cursor = lessonsCollection.find(query, options);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.delete("/my-lessons/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("ID Server :", id);
+      const query = { _id: new ObjectId(id) };
+      const result = await lessonsCollection.deleteOne(query);
       res.send(result);
     });
 
