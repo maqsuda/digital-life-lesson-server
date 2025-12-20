@@ -65,7 +65,7 @@ async function run() {
         query.CreateBy = email;
       }
 
-      const options = { sort: { createdAt: -1 } };
+      const options = { sort: { CreateDate: -1 } };
       const cursor = lessonsCollection.find(query, options);
       const result = await cursor.toArray();
       res.send(result);
