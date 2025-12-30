@@ -21,7 +21,8 @@ app.use(cors());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tbo2m.mongodb.net/?appName=Cluster0`;
 
-// const uri = "mongodb+srv://<db_username>:<db_password>@cluster0.tbo2m.mongodb.net/?appName=Cluster0";
+// const uri =
+//   "mongodb+srv://digital_life:WKMwFyZMe3Mavmj9@cluster0.tbo2m.mongodb.net/?appName=Cluster0";
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -33,7 +34,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // await client.connect();
+    await client.connect();
 
     const myDB = client.db("digital_life_db");
     const usersCollection = myDB.collection("users");
@@ -152,7 +153,7 @@ async function run() {
       const query = {};
       const { isFeatured } = req.query;
 
-      // console.log(isFeatured);
+      console.log(isFeatured);
       if (isFeatured) {
         query.isFeatured = isFeatured;
       }
@@ -197,10 +198,10 @@ async function run() {
     //       })
 
     // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    // console.log(
-    //   "Pinged your deployment. You successfully connected to MongoDB!"
-    // );
+    await client.db("admin").command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -208,5 +209,5 @@ async function run() {
 }
 run().catch(console.dir);
 app.listen(port, () => {
-  // console.log(`Example app listening on port ${port}`);
+  console.log(`Example app listening on port ${port}`);
 });
