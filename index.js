@@ -63,6 +63,22 @@ async function run() {
       }
     });
 
+    app.patch("/users/:email", async (req, res) => {
+      const updateData = req.body;
+      const email = req.params.email;
+      const query = { email: email };
+
+      const update = {
+        $set: {
+          displayName: updateData.displayName,
+          photoURL: updateData.photoURL,
+        },
+      };
+      const options = {};
+      const result = await usersCollection.updateOne(query, update, options);
+      res.send(result);
+    });
+
     app.post("/create-checkout-session", async (req, res) => {
       const paymentInfo = req.body;
       const amount = parseInt(paymentInfo.cost) * 100;
@@ -85,6 +101,7 @@ async function run() {
         metadata: {
           userId: paymentInfo.userId,
           userName: paymentInfo.userName,
+          email: paymentInfo.email,
         },
         success_url: `${process.env.SITE_DOMAIN}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payment-cancelled`,
@@ -153,7 +170,6 @@ async function run() {
       const query = {};
       const { isFeatured } = req.query;
 
-      console.log(isFeatured);
       if (isFeatured) {
         query.isFeatured = isFeatured;
       }
@@ -188,6 +204,13 @@ async function run() {
       console.log("ID Server :", id);
       const query = { _id: new ObjectId(id) };
       const result = await lessonsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.get("/my-lesson/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await lessonsCollection.findOne(query);
       res.send(result);
     });
 
