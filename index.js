@@ -81,6 +81,7 @@ async function run() {
 
     app.post("/create-checkout-session", async (req, res) => {
       const paymentInfo = req.body;
+      console.log(paymentInfo);
       const amount = parseInt(paymentInfo.cost) * 100;
 
       const session = await stripe.checkout.sessions.create({
@@ -90,7 +91,7 @@ async function run() {
               currency: "USD",
               unit_amount: amount,
               product_data: {
-                name: `Please pay for: paymentInfo.userName}`,
+                name: `Please pay for: ${paymentInfo.userName}`,
               },
             },
             quantity: 1,
@@ -101,10 +102,10 @@ async function run() {
         metadata: {
           userId: paymentInfo.userId,
           userName: paymentInfo.userName,
-          email: paymentInfo.email,
+          email: paymentInfo.userEmail,
         },
-        success_url: `${process.env.SITE_DOMAIN}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payment-cancelled`,
+        success_url: `${process.env.SITE_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.SITE_DOMAIN}/payment-cancelled`,
       });
 
       // console.log(session);
@@ -113,11 +114,17 @@ async function run() {
 
     app.patch("/payment-success", async (req, res) => {
       const sessionId = req.query.session_id;
-
       const session = await stripe.checkout.sessions.retrieve(sessionId);
 
       // console.log("session retrieve", session);
       // const trackingId = generateTrackingId();
+
+      const transactionId = session.payment_intent;
+      const query = { transactionId: transactionId };
+      const queryExits = await paymentCollection.findOne(query);
+      if (queryExits) {
+        return res.send({ message: "Already Exits", transactionId });
+      }
 
       if (session.payment_status === "paid") {
         const id = session.metadata.userId;
