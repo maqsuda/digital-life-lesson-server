@@ -1,6 +1,33 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./digital-life-lessons-c6cff-firebase-adminsdk-fbsvc-c6bd5def7e.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const verifyFBToken = async (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+
+  try {
+    const idToken = token.split(" ")[1];
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    console.log("decoded in the token", decoded);
+    req.decoded_email = decoded.email;
+    next();
+  } catch (err) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+};
+
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
@@ -9,7 +36,7 @@ const port = process.env.PORT || 3000;
 const crypto = require("crypto");
 
 function generateTrackingId() {
-  const prefix = "PREMIUM"; // your brand prefix
+  const prefix = "PREMIUM";
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
   const random = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6-char random hex
 
@@ -49,9 +76,15 @@ async function run() {
       const result = await usersCollection.findOne(query);
       res.send(result);
     });
+    app.get("/users", verifyFBToken, async (req, res) => {
+      const cursor = usersCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     app.post("/users", async (req, res) => {
       const newUser = req.body;
+      newUser.role = "user";
       const email = req.body.email;
       const query = { email: email };
       const existingUsers = await usersCollection.findOne(query);
@@ -105,6 +138,7 @@ async function run() {
           email: paymentInfo.userEmail,
         },
         success_url: `${process.env.SITE_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        // success_url: `${process.env.SITE_DOMAIN}/home`
         cancel_url: `${process.env.SITE_DOMAIN}/payment-cancelled`,
       });
 
@@ -131,7 +165,7 @@ async function run() {
         const query = { _id: new ObjectId(id) };
         const update = {
           $set: {
-            isPremium: true,
+            accessLevel: "Premium",
             price: 1500,
             // trackingId: trackingId,
           },
@@ -163,6 +197,25 @@ async function run() {
       }
 
       res.send({ success: false });
+    });
+
+    app.get("/payments", verifyFBToken, async (req, res) => {
+      const email = req.query.email;
+      const query = {};
+
+      console.log("headers", req.headers);
+
+      if (email) {
+        query.customerEmail = email;
+
+        // check email address
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+      }
+      const cursor = usersCollection.find(query).sort({ paidAt: -1 });
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     //Lessons apis
