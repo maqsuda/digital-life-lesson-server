@@ -100,7 +100,21 @@ async function run() {
     });
 
     app.get("/users", verifyFBToken, async (req, res) => {
-      const cursor = usersCollection.find();
+      const searchText = req.query.searchText;
+      const query = {};
+      if (searchText) {
+        //for single query
+        // query.displayName = { $regex: searchText, $options: "i" };
+        //for multiple field query
+        query.$or=[
+          ({ displayName: { $regex: searchText, $options: "i" } },
+          { email: { $regex: searchText, $options: "i" } })
+        ];
+      }
+      const cursor = usersCollection
+        .find(query)
+        .sort({ displayName: 1 })
+        .limit(3);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -122,7 +136,7 @@ async function run() {
     app.patch(
       "/users/:id/role",
       verifyFBToken,
-      // verifyAdmin,
+      verifyAdmin,
       async (req, res) => {
         const id = req.params.id;
         // console.log(id);
