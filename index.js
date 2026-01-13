@@ -68,6 +68,21 @@ async function run() {
     const lessonsCollection = myDB.collection("lessons");
     const paymentCollection = myDB.collection("payments");
 
+    //midware
+    // middle admin before allowing admin activity
+    // must be used after verifyFBToken middleware
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded_email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+
+      if (!user || user.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      next();
+    };
+
     //user api
 
     app.get("/users/:email", async (req, res) => {
@@ -104,20 +119,25 @@ async function run() {
       }
     });
 
-    app.patch("/users/:id/role", verifyFBToken, async (req, res) => {
-      const id = req.params.id;
-      // console.log(id);
-      const roleAdmin = req.body;
-      const query = { _id: new ObjectId(id) };
-      const updateDoc = {
-        $set: {
-          role: roleAdmin.role,
-        },
-      };
+    app.patch(
+      "/users/:id/role",
+      verifyFBToken,
+      // verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        // console.log(id);
+        const roleAdmin = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            role: roleAdmin.role,
+          },
+        };
 
-      const result = await usersCollection.updateOne(query, updateDoc);
-      res.send(result);
-    });
+        const result = await usersCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
 
     app.patch("/users/:email", async (req, res) => {
       const updateData = req.body;
