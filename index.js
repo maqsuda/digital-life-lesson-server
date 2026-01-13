@@ -4,7 +4,7 @@ const app = express();
 
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./digital-life-lessons.json");
+const serviceAccount = require("./digital-life-lessons-adminsdk.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
