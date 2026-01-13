@@ -76,6 +76,14 @@ async function run() {
       const result = await usersCollection.findOne(query);
       res.send(result);
     });
+
+    app.get("/users/:email/role", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ role: user?.role || "user" });
+    });
+
     app.get("/users", verifyFBToken, async (req, res) => {
       const cursor = usersCollection.find();
       const result = await cursor.toArray();
@@ -94,6 +102,21 @@ async function run() {
         const result = await usersCollection.insertOne(newUser);
         res.send(result);
       }
+    });
+
+    app.patch("/users/:id/role", verifyFBToken, async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const roleAdmin = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: roleAdmin.role,
+        },
+      };
+
+      const result = await usersCollection.updateOne(query, updateDoc);
+      res.send(result);
     });
 
     app.patch("/users/:email", async (req, res) => {
