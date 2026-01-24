@@ -4,7 +4,12 @@ const app = express();
 
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./digital-life-lessons-adminsdk.json");
+// const serviceAccount = require("./digital-life-lessons-adminsdk.json");
+
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf8",
+);
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -106,9 +111,9 @@ async function run() {
         //for single query
         // query.displayName = { $regex: searchText, $options: "i" };
         //for multiple field query
-        query.$or=[
+        query.$or = [
           ({ displayName: { $regex: searchText, $options: "i" } },
-          { email: { $regex: searchText, $options: "i" } })
+          { email: { $regex: searchText, $options: "i" } }),
         ];
       }
       const cursor = usersCollection
@@ -150,7 +155,7 @@ async function run() {
 
         const result = await usersCollection.updateOne(query, updateDoc);
         res.send(result);
-      }
+      },
     );
 
     app.patch("/users/:email", async (req, res) => {
@@ -290,8 +295,9 @@ async function run() {
       if (isFeatured) {
         query.isFeatured = isFeatured;
       }
+
       const options = { sort: { CreateDate: -1 } };
-      const cursor = lessonsCollection.find(query, options);
+      const cursor = lessonsCollection.find(query, options).limit(8);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -316,6 +322,13 @@ async function run() {
       res.send(result);
     });
 
+    // app.get("/my-lessons/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const result = lessonsCollection.findOne(query);
+    //   res.send(result);
+    // });
+
     app.delete("/my-lessons/:id", async (req, res) => {
       const id = req.params.id;
       console.log("ID Server :", id);
@@ -338,10 +351,10 @@ async function run() {
     //       })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!",
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

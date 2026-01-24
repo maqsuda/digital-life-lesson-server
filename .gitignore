@@ -1,3 +1,5 @@
 node_modules
 .env
 digital-life-lessons-adminsdk.json
+
+.vercel
