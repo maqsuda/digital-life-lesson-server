@@ -4,12 +4,12 @@ const app = express();
 
 const admin = require("firebase-admin");
 
-// const serviceAccount = require("./digital-life-lessons-adminsdk.json");
+const serviceAccount = require("./digital-life-lessons-adminsdk.json");
 
-const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
-  "utf8",
-);
-const serviceAccount = JSON.parse(decoded);
+// const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+//   "utf8",
+// );
+// const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -285,6 +285,17 @@ async function run() {
     app.get("/allLessons", async (req, res) => {
       const cursor = lessonsCollection.find();
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/allLessons/:id", async (req, res) => {
+      const { id } = req.params;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+
+      const result = await lessonsCollection.findOne(query);
+      // const result = await cursor.toArray();
+      console.log(result);
       res.send(result);
     });
 
