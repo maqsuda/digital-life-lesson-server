@@ -4,10 +4,11 @@ const app = express();
 
 const admin = require("firebase-admin");
 
-// const serviceAccount = require("./digital-life-lessons-adminsdk.json");
-const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
-  "utf8",
-);
+const serviceAccount = require("./digital-life-lessons-adminsdk.json");
+
+// const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+//   "utf8",
+// );
 // const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
