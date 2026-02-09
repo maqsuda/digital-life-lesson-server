@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+require("dotenv").config();
 
 const admin = require("firebase-admin");
 
@@ -33,7 +34,6 @@ const verifyFBToken = async (req, res, next) => {
   }
 };
 
-require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
@@ -72,10 +72,8 @@ async function run() {
     const usersCollection = myDB.collection("users");
     const lessonsCollection = myDB.collection("lessons");
     const paymentCollection = myDB.collection("payments");
+    const favoritesCollection = myDB.collection("favorites");
 
-    //midware
-    // middle admin before allowing admin activity
-    // must be used after verifyFBToken middleware
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded_email;
       const query = { email };
@@ -87,6 +85,12 @@ async function run() {
 
       next();
     };
+    //favirotes api
+    // app.post("/add-favorites", async (req, res) => {
+    //   const newUser = req.body;
+    //   const result = await lessonsCollection.insertOne(newUser);
+    //   res.send(result);
+    // // });
 
     //user api
 
@@ -362,6 +366,7 @@ async function run() {
     //       })
 
     // Send a ping to confirm a successful connection
+
     // await client.db("admin").command({ ping: 1 });
     // console.log(
     //   "Pinged your deployment. You successfully connected to MongoDB!",
